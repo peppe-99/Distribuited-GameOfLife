@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<time.h>
-#include"mpi.h"
+#include<mpi.h>
 
 #define LIVE "\xF0\x9F\x91\xBE"
 #define DEATH "\xF0\x9F\x94\xB2"
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 
     int row = atoi(argv[1]);
     int col = atoi(argv[2]);
-    int generations = atoi(argv[3]);
+    int generations = atoi(argv[3]);   
 
     if (row < np) {
         if (rank == 0) fprintf(stderr, "The number of rows must be at least equal to the number of processors\n");
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 
     MPI_Scatterv(matrix, send_counts, displs, MPI_INT, process_matrix, process_size, MPI_INT, 0, MPI_COMM_WORLD);
 
-    for (int generation = 0; generation < generations; generation++) {
+    for (int generation = 0; generation < generations; generation++) {     
         /*Tutti i processi tranne 0: 
             inviano al precedente la propria prima riga 
             richiedono al precedente la sua ultima riga */
@@ -114,7 +114,9 @@ int main(int argc, char **argv) {
             int chained_row = 0;
             update_chained_row(chained_row, local_row, col, process_matrix, new_process_matrix, top_row, bottom_row);
         }
+        /* altrimenti avremo la prima o l'ultima riga vincolate*/
         else {
+
             if (rank > 0) {
                 MPI_Wait(&receive_prev_row, MPI_STATUS_IGNORE);
                 
@@ -132,9 +134,10 @@ int main(int argc, char **argv) {
         /* swap dei puntatori */
         swap(&process_matrix, &new_process_matrix);
     }
-
+ 
     MPI_Gatherv(process_matrix, process_size, MPI_INT, matrix, send_counts, displs, MPI_INT, 0, MPI_COMM_WORLD);
-
+    
+    MPI_Barrier(MPI_COMM_WORLD);
     end_time = MPI_Wtime();
 
     if (rank == 0) {
