@@ -1,1 +1,1 @@
-# Distribuited-GameOfLife
+# MPI-GameOfLife
