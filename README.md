@@ -6,11 +6,11 @@
 **Project ID**: 01310 % 5 == 0
 
 ## Indice
-* [Introduzione](#Introduzione)
-* [Istruzioni per l'esecuzione](#Istruzioni_per_l'esecuzione)
-* [Descrizione della soluzione](#Descrizione_della_soluzione)
-* [Benchmarks](#Benchmarks)
-* [Analisi dei risultati](#Analisi_dei_Risultati)
+* [Introduzione](#introduzione)
+* [Istruzioni per l'esecuzione](#istruzioni-per-l'esecuzione)
+* [Descrizione della soluzione](#descrizione-della-soluzione)
+* [Benchmarks](#benchmarks)
+* [Analisi dei risultati](#analisi-dei-risultati)
 
 ## Introduzione
 **The Game of Live**, anche conosciuto come **Life**, è un automa cellulare sviluppato dal matematico inglese John Conway alla fine degli anni sessanta. Lo scopo è quello di mostrare come comportamenti simili alla vita possono nascere da regole semplici e da interazioni tra diversi corpi. Ad esempio, alcuni pattern ricordano la riproduzione cellulare, altri il volo di un aliante e così via.
