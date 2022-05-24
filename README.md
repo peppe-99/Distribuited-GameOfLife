@@ -7,7 +7,7 @@
 
 ## Indice
 * [Introduzione](#introduzione)
-* [Istruzioni per l'esecuzione](#istruzioni-per-l'esecuzione)
+* [Istruzioni per l'esecuzione](#istruzioni-per-lesecuzione)
 * [Descrizione della soluzione](#descrizione-della-soluzione)
 * [Benchmarks](#benchmarks)
 * [Analisi dei risultati](#analisi-dei-risultati)
