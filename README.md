@@ -5,9 +5,11 @@
  
 **Project ID**: 01310 % 5 == 0
 
-## Indice
+## Indice[
 * [Introduzione](#introduzione)
 * [Istruzioni per l'esecuzione](#istruzioni-per-lesecuzione)
+	* [Compilazione](#compilazione)
+	* [Esecuzione](#esecuzione)
 * [Descrizione della soluzione](#descrizione-della-soluzione)
 * [Benchmarks](#benchmarks)
 	* [Weak Scalability](#weak-scalability)
@@ -23,11 +25,11 @@ Si tratta di un "**gioco senza giocatori**" in quanto la sua evoluzione dipende 
 - Qualsiasi cella morta con esattamente tre celle vive aciacenti diventa una cella viva, come per effetto di riproduzione.
 
 ## Istruzioni per l'esecuzione
-- **Compilazione**
+### Compilazione
 ```
 mpicc -g distribuited-game-of-life.c -o distribuited-game-of-life
 ```
-- **Esecuzione**: 
+### Esecuzione 
 ```
 mpirun --allow-run-as-root -np <np> distribuited-game-of-life <row> <col> <num_gen>
 ```
