@@ -10,6 +10,8 @@
 * [Istruzioni per l'esecuzione](#istruzioni-per-lesecuzione)
 * [Descrizione della soluzione](#descrizione-della-soluzione)
 * [Benchmarks](#benchmarks)
+	* [Weak Scalability](#weak-scalability)
+	* [Strong Scalability](#strong-scalability)
 * [Analisi dei risultati](#analisi-dei-risultati)
 
 ## Introduzione
@@ -42,7 +44,7 @@ Prima di iniziare il gioco vengono controllati i parametri dati in input dall'ut
 
 `matrix` è un array che rappresenta la matrice di gioco, il cui stato sarà inizializzato dal processo **master** in maniera pseudocasuale. La matrice di gioco è stata suddivisa per righe in maniera equa fra tutti i processi. La suddivisione viene effettuata con la funzione `MPI_Scatterv()` una volta aver calcolato i displacements e quanti elementi invare ad ogni processo.
 
-Ogni processo avrà la prima e/o l'ultima riga della propria sottomatrice vincolate. Per questo motivo, all'inizio di ogni generazione avviene uno scambio non bloccante di righe tra processi vicini. Ogni processo tranne l'ultimo invia la propria ultima riga al processo successivo ed ogni processo tranne il primo invia la sua prima riga al processo precedente:
+Ogni processo avrà la prima e/o l'ultima riga della propria sottomatrice vincolate. Per questo motivo, all'inizio di ogni generazione avviene uno scambio non bloccante di righe tra processi vicini. Ogni processo tranne l'ultimo invia la propria ultima riga (`bottom_row`) al processo successivo ed ogni processo tranne il primo invia la sua prima riga (`top_row`) al processo precedente:
 ```c
 if (rank > 0) {
 	MPI_Isend(&process_matrix[0], col, MPI_INT, rank-1, rank-1, MPI_COMM_WORLD, &send_first_row);
@@ -52,14 +54,168 @@ if (rank < np-1) {
 	MPI_Isend(&process_matrix[(local_row-1) * col], col, MPI_INT, rank+1, rank+1, MPI_COMM_WORLD, &send_last_row);
 	MPI_Irecv(bottom_row, col, MPI_INT, rank+1, rank, MPI_COMM_WORLD, &receive_next_row);
 }
-```
-Poi ogni processo inizia a calcolare lo stato delle righe non vincolate (se ci sono) tramite la funzione `update_not_chained_rows()`. Successivamente, viene calcolato lo stato delle righe vincolate. A questo punto possiamo trovarci in due situazioni:
-1. la sottomatrice è composta da una sola riga. Quindi per calcolarne lo stato successivo sono necessarie sia la `top_row` che la `bottom_row`;
-2. la sottomatrice è composta da almeno due righe. nella generazione successiva sono necessarie sia la che quindi è doppiamente vincolata.
+````
+Poi ogni processo inizia a calcolare il nuovo stato delle righe non vincolate (se ci sono) tramite la funzione `update_not_chained_rows()`:
+```c
+void update_not_chained_rows(int start_row, int end_row, int row, int col, int *process_matrix, int *new_process_matrix) {
+    for (int i = start_row; i < end_row; i++) {
+        for (int j = 0; j < col; j++) {
+            int alives = neighbors_alive(i, j, row, col, process_matrix, NULL, NULL);
 
-**To be continued...**
+            if (process_matrix[i * col + j] == 1 && (alives == 2 || alives == 3)) {
+                new_process_matrix[i * col + j] = 1;
+            }
+            else if (process_matrix[i * col + j] == 0 && alives == 3) {
+                new_process_matrix[i * col + j] = 1;
+            }
+            else new_process_matrix[i * col + j] = 0;
+        }
+    }
+}
+```
+Successivamente, calcola il nuovo stato di quelle vincolate con la funzione `update_chained_row()`. 
+```c
+void update_chained_row(int chained_row, int row, int col, int *process_matrix, int *new_process_matrix, int *top_row, int *bottom_row) {
+    int i = chained_row;
+    for (int j = 0; j < col; j++) {
+        int alives = neighbors_alive(i, j, row, col, process_matrix, top_row, bottom_row);
+
+        if (process_matrix[i * col + j] == 1 && (alives == 2 || alives == 3)) {
+            new_process_matrix[i * col + j] = 1;
+        }
+        else if (process_matrix[i * col + j] == 0 && alives == 3) {
+            new_process_matrix[i * col + j] = 1;
+        }
+        else new_process_matrix[i * col + j] = 0;
+    }
+}
+```
+In entrambi i casi viene utilizzata la funzione `neighbords_alive()` per calcolare il numero di vicini vivi per ogni cella. Tale funzione considera tutti i prossibili casi:
+1. **riga non vincolata**;
+2. **riga vincolata superiormente**, ovvero che richiede la `bottom_row` del processo precedente;
+3. **riga vincolata inferiormente**, ovvero che richiede la `top_row` del processo successivo;
+4. **riga doppiamente vincolata**, ovvero che richiede sia la `bottom_row` che la `top_row`.
+```c
+int neighbors_alive(int i, int j, int row, int col, int *process_matrix, int *top_row, int *bottom_row) {
+    int top = 0;
+    int tl_corner = 0;
+    int tr_corner = 0;
+    if (i > 0) {
+        top = process_matrix[(i-1) * col + j];        
+        if (j > 0) {
+            tl_corner = process_matrix[(i-1) * col + (j-1)];
+        }
+        if (j < col-1) {
+            tr_corner = process_matrix[(i-1) * col + (j+1)];
+        }
+    } 
+    else if(top_row != NULL) {
+        top = top_row[j];
+        if (j > 0) {
+            tl_corner = top_row[j-1];
+        }
+        if (j < col-1) {
+            tr_corner = top_row[j+1];
+        }
+    }
+
+    int left = (j > 0) ? process_matrix[i * col + (j-1)] : 0;
+    int right = (j < col-1) ? process_matrix[i * col + (j+1)] : 0;
+
+    int bottom = 0;
+    int bl_corner = 0;
+    int br_corner = 0;
+    if (i < row-1) {
+        bottom = process_matrix[(i+1) * col + j];
+        if (j > 0) {
+            bl_corner = process_matrix[(i+1) * col + (j-1)];
+        }
+        if (j < col-1) {
+            br_corner = process_matrix[(i+1) * col + (j+1)];
+        }
+    }
+    else if(bottom_row != NULL) {
+        bottom = bottom_row[j];
+        if (j > 0) {
+            bl_corner = bottom_row[j-1];
+        }
+        if (j < col-1) {
+            br_corner = bottom_row[j+1];
+        }
+    }
+
+    return top + left + right + bottom + tl_corner + tr_corner + bl_corner + br_corner;
+}
+```
+Lo stato di ogni cella viene letto dalla matrice di lettura (`process_matrix`), invece, il nuovo stato viene scritto nella matrice di scrittura (`new_process_matrix`). Per ottimizzare la memoria utilizzata, al termine di ogni generazione viene effettuato uno swap di queste matrici con la funzione `swap()`:
+```c
+void swap(int **current_matrix, int **new_matrix) {
+    int *temp = *current_matrix;
+    *current_matrix = *new_matrix;
+    *new_matrix = temp;
+}
+```
+Al termine di tutte le generazioni, il proccesso master mediante una `MPI_GATHERV()` ottiene tutte le `process_matrix` e le aggrega all'interno di `matrix`. All'interno di `matrix` ci sarà lo stato finale al termine di tutte le generazioni.
 
 ## Benchmarks
+L'agoritmo è stato testato su **Google Cloud Platform** su un cluster di 6 macchine **e2-standard**. Ogni macchina è dotata di 4 VCPUs, quindi per un totale di 24 VCPUs. L'algorimo è stato testato in termini di **strong scalability** e **weak scalability**. Di seguti possiamo visionare i risultati.
+
+### Weak Scalability
+L'algoritmo è stato eseguito su una matrixe di (1600 x **P**) x 12800, dove **P** è il numero di processori.
+| VCPUs | Tempo |
+|-------|-------|
+|   2   |       |
+|   3   |       |
+|   4   |       |
+|   5   |       |
+|   6   |       |
+|   7   |       |
+|   8   |       |
+|   9   |       |
+|   10  |       |
+|   11  |       |
+|   12  |       |
+|   13  |       |
+|   14  |       |
+|   15  |       |
+|   16  |       |
+|   17  |       |
+|   18  |       |
+|   19  |       |
+|   20  |       |
+|   21  |       |
+|   22  |       |
+|   23  |       |
+|   24  |       |
+
+### Strong Scalability
+L'algoritmo è stato esegutio su una matrice di 12800x12800 elementi
+| VCPUs | Tempo | Speed up |
+|-------|-------|----------|
+|   1   |       |     -    |
+|   2   |       |          |
+|   3   |       |          |
+|   4   |       |          |
+|   5   |       |          |
+|   6   |       |          |
+|   7   |       |          |
+|   8   |       |          |
+|   9   |       |          |
+|   10  |       |          |
+|   11  |       |          |
+|   12  |       |          |
+|   13  |       |          |
+|   14  |       |          |
+|   15  |       |          |
+|   16  |       |          |
+|   17  |       |          |
+|   18  |       |          |
+|   19  |       |          |
+|   20  |       |          |
+|   21  |       |          |
+|   22  |       |          |
+|   23  |       |          |
+|   24  |       |          |
 
 ## Analisi dei Risultati
 ``
