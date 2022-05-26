@@ -21,21 +21,41 @@ Si tratta di un "**gioco senza giocatori**" in quanto la sua evoluzione dipende 
 - Qualsiasi cella morta con esattamente tre celle vive aciacenti diventa una cella viva, come per effetto di riproduzione.
 
 ## Istruzioni per l'esecuzione
-- **Compilazione**: `mpicc -g distribuited-game-of-life.c -o distribuited-game-of-life`
-- **Esecuzione**: `mpirun --allow-run-as-root -np <np> distribuited-game-of-life <row> <col> <num_gen>`
+- **Compilazione**
+```
+mpicc -g distribuited-game-of-life.c -o distribuited-game-of-life
+```
+- **Esecuzione**: 
+```
+mpirun --allow-run-as-root -np <np> distribuited-game-of-life <row> <col> <num_gen>
+```
 Sostituisci:
-	- **np**: numero di processori;
-	- **row**: numero righe della matrice di gioco;
-	- **col**: numero colonne della matrice di gioco;
-	- **num_gen**: numero di generazioni.
+- **np**: numero di processori;
+- **row**: numero righe della matrice di gioco;
+- **col**: numero colonne della matrice di gioco;
+- **num_gen**: numero di generazioni.
 
 ## Descrizione della Soluzione
 > **Assunzioni**: esistono diverse varianti del gioco. È stata considerata una matrice **non toroidale**. Quindi le celle ai bordi della matrice hanno 5 vicini, invece, quelle agli angoli solo 3. Inoltre, è stato deciso che il **master** costruibisce alla computazione.
 
 Prima di iniziare il gioco vengono controllati i parametri dati in input dall'utente, riguardanti il numero di processori, grandezza della matrice e numero di generazioni. Successivamente vengono create tutte le strutture dati necessarie.
-Terminata la parte di inizializzazione,
 
-`matrix` è un array che rappresenta la matrice di gioco, il cui stato sarà inizializzato dal processo **master** in maniera pseudocasuale. La matrice di gioco è stata suddivisa per righe in maniera equa fra tutti i processi. In questo modo ogni processo avrà una propria sotto matrice locale su cui andrà a lavorare. 
+`matrix` è un array che rappresenta la matrice di gioco, il cui stato sarà inizializzato dal processo **master** in maniera pseudocasuale. La matrice di gioco è stata suddivisa per righe in maniera equa fra tutti i processi. La suddivisione viene effettuata con la funzione `MPI_Scatterv()` una volta aver calcolato i displacements e quanti elementi invare ad ogni processo.
+
+Ogni processo avrà la prima e/o l'ultima riga della propria sottomatrice vincolate. Per questo motivo, all'inizio di ogni generazione avviene uno scambio non bloccante di righe tra processi vicini. Ogni processo tranne l'ultimo invia la propria ultima riga al processo successivo ed ogni processo tranne il primo invia la sua prima riga al processo precedente:
+```c
+if (rank > 0) {
+	MPI_Isend(&process_matrix[0], col, MPI_INT, rank-1, rank-1, MPI_COMM_WORLD, &send_first_row);
+	MPI_Irecv(top_row, col, MPI_INT, rank-1, rank, MPI_COMM_WORLD, &receive_prev_row);
+}
+if (rank < np-1) {
+	MPI_Isend(&process_matrix[(local_row-1) * col], col, MPI_INT, rank+1, rank+1, MPI_COMM_WORLD, &send_last_row);
+	MPI_Irecv(bottom_row, col, MPI_INT, rank+1, rank, MPI_COMM_WORLD, &receive_next_row);
+}
+```
+Poi ogni processo inizia a calcolare lo stato delle righe non vincolate (se ci sono) tramite la funzione `update_not_chained_rows()`. Successivamente, viene calcolato lo stato delle righe vincolate. A questo punto possiamo trovarci in due situazioni:
+1. la sottomatrice è composta da una sola riga. Quindi per calcolarne lo stato successivo sono necessarie sia la `top_row` che la `bottom_row`;
+2. la sottomatrice è composta da almeno due righe. nella generazione successiva sono necessarie sia la che quindi è doppiamente vincolata.
 
 **To be continued...**
 
