@@ -163,7 +163,7 @@ Al termine di tutte le generazioni, il proccesso master mediante una `MPI_GATHER
 L'agoritmo è stato testato su **Google Cloud Platform** su un cluster di 6 macchine **e2-standard**. Ogni macchina è dotata di 4 VCPUs, quindi per un totale di 24 VCPUs. L'algorimo è stato testato in termini di **strong scalability** e **weak scalability**. Di seguti possiamo visionare i risultati.
 
 ### Weak Scalability
-L'algoritmo è stato eseguito su una matrixe di (1600 x **P**) x 12800, dove **P** è il numero di processori.
+L'algoritmo è stato eseguito su una matrixe di 1600**P**x12800, dove **P** è il numero di processori.
 | VCPUs | Tempo in s |
 |-------|------------|
 |   2   |            |
