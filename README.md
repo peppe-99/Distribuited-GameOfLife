@@ -191,7 +191,7 @@ L'algoritmo è stato eseguito su una matrixe di 1600**P**x12800, dove **P** è i
 |   24  |            |
 
 ### Strong Scalability
-L'algoritmo è stato esegutio su una matrice di 12800x12800 elementi
+L'algoritmo è stato esegutio su una matrice di 12800x12800 elementi. Lo speed up è stato calcolando dividendo il tempo di esecuzione con un processore con il tempo di esecuzione con **P** processori.
 | VCPUs | Tempo in s | Speed up |
 |-------|------------|----------|
 |   1   |            |     -    |
