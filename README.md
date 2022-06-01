@@ -5,7 +5,7 @@
  
 **Project ID**: 01310 % 5 == 0
 
-## Indice[
+## Indice
 * [Introduzione](#introduzione)
 * [Istruzioni per l'esecuzione](#istruzioni-per-lesecuzione)
 	* [Compilazione](#compilazione)
@@ -162,34 +162,6 @@ Al termine di tutte le generazioni, il proccesso master mediante una `MPI_GATHER
 ## Benchmarks
 L'agoritmo è stato testato su **Google Cloud Platform** su un cluster di 6 macchine **e2-standard**. Ogni macchina è dotata di 4 VCPUs, quindi per un totale di 24 VCPUs. L'algorimo è stato testato in termini di **strong scalability** e **weak scalability**. Di seguti possiamo visionare i risultati.
 
-### Weak Scalability
-L'algoritmo è stato eseguito su una matrixe di 1600**P**x12800, dove **P** è il numero di processori.
-| VCPUs | Tempo in s |
-|-------|------------|
-|   2   |            |
-|   3   |            |
-|   4   |            |
-|   5   |            |
-|   6   |            |
-|   7   |            |
-|   8   |            |
-|   9   |            |
-|   10  |            |
-|   11  |            |
-|   12  |            |
-|   13  |            |
-|   14  |            |
-|   15  |            |
-|   16  |            |
-|   17  |            |
-|   18  |            |
-|   19  |            |
-|   20  |            |
-|   21  |            |
-|   22  |            |
-|   23  |            |
-|   24  |            |
-
 ### Strong Scalability
 L'algoritmo è stato esegutio su una matrice di 12800x12800 elementi. Lo speed up è stato calcolando dividendo il tempo di esecuzione con un processore con il tempo di esecuzione con **P** processori.
 | VCPUs | Tempo in s | Speed up |
@@ -218,6 +190,36 @@ L'algoritmo è stato esegutio su una matrice di 12800x12800 elementi. Lo speed u
 |   22  |            |          |
 |   23  |            |          |
 |   24  |            |          |
+
+### Weak Scalability
+L'algoritmo è stato eseguito su una matrixe di 1000**P**x24000, dove **P** è il numero di processori.
+| VCPUs | Tempo in s |
+|-------|------------|
+|   1   |            |
+|   2   |            |
+|   3   |            |
+|   4   |            |
+|   5   |            |
+|   6   |            |
+|   7   |            |
+|   8   |            |
+|   9   |            |
+|   10  |            |
+|   11  |            |
+|   12  |            |
+|   13  |            |
+|   14  |            |
+|   15  |            |
+|   16  |            |
+|   17  |            |
+|   18  |            |
+|   19  |            |
+|   20  |            |
+|   21  |            |
+|   22  |            |
+|   23  |            |
+|   24  |            |
+
 
 ## Analisi dei Risultati
 ``
