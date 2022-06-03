@@ -10,11 +10,11 @@ mpicc distribuited-game-of-life.c -o distribuited-game-of-life
 echo "TIME,PROCESSES,ROWS,COLS,GENERATIONS" >> results/weak_scalability.csv
 
 # Exec the program with differents num of process and matrix size
-size=1600
-for ((p=1; p<=8; p=p+1))
+size=1000
+for ((p=1; p<=24; p=p+1))
 do
-    echo "Start program with $p process and ($((size*p)), 12800) matrix"
-    mpirun --allow-run-as-root -np $p distribuited-game-of-life $((size*p)) 12800 100 >> results/weak_scalability.csv
+    echo "Start program with $p process and ($((size*p)), 24000) matrix"
+    mpirun --allow-run-as-root -np $p --hostfile host distribuited-game-of-life $((size*p)) 24000 100 >> results/weak_scalability.csv
 done
 
 # Show performance
