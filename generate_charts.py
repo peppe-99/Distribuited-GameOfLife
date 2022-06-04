@@ -2,13 +2,14 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 def strong_scalability():
-    data = pd.read_csv('results/strong_scalability.csv')
+    data = pd.read_csv('results/strong_scalability.csv', index_col=False)
     timing = data['TIME']
     speed_up = []
     for time in timing:
         speed_up.append(timing[0]/time)
 
     data['SPEED_UP'] = speed_up
+    data.to_csv('results/strong_scalability.csv', index=False)
 
     plt.figure(figsize=(16,10))
     plt.title('Strong Scalability')
@@ -18,6 +19,9 @@ def strong_scalability():
     plt.plot(data['PROCESSES'][1:], data['PROCESSES'][1:], label='Ideale', linestyle='--')
     plt.legend(title='Speed Up')
     plt.grid(True)
+    plt.xlim([1,25])
+    plt.ylim([1,24])    
+    plt.xticks(data['PROCESSES'][1:])
     plt.savefig('results/strong_scalability.png')
 
 
@@ -30,6 +34,7 @@ def weak_scalability():
     plt.ylabel('Tempo in Secondi')
     plt.plot(data['PROCESSES'], data['TIME'])
     plt.grid(True)
+    plt.xticks(data['PROCESSES'])
     plt.savefig('results/weak_scalability.png')
 
 
