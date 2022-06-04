@@ -34,7 +34,7 @@ def weak_scalability():
     plt.xlabel('Numero Processori')
     plt.ylabel('Tempo in Secondi')
     plt.plot(data['PROCESSES'], data['TIME'], label='Ottenuto')
-    ideale = [data['TIME'][1] for x in range(0,24)]
+    ideale = [data['TIME'][0] for x in range(0,24)]
     plt.plot(data['PROCESSES'], ideale, label='Ideale', linestyle='--')
     plt.legend()
     plt.grid(True)
