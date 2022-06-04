@@ -1,3 +1,4 @@
+from cProfile import label
 import pandas as pd
 from matplotlib import pyplot as plt
 
@@ -32,7 +33,10 @@ def weak_scalability():
     plt.title('Weak Scalability')
     plt.xlabel('Numero Processori')
     plt.ylabel('Tempo in Secondi')
-    plt.plot(data['PROCESSES'], data['TIME'])
+    plt.plot(data['PROCESSES'], data['TIME'], label='Ottenuto')
+    ideale = [data['TIME'][1] for x in range(0,24)]
+    plt.plot(data['PROCESSES'], ideale, label='Ideale', linestyle='--')
+    plt.legend()
     plt.grid(True)
     plt.xticks(data['PROCESSES'])
     plt.savefig('results/weak_scalability.png')
