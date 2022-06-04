@@ -11,6 +11,7 @@
 	* [Compilazione](#compilazione)
 	* [Esecuzione](#esecuzione)
 * [Descrizione della soluzione](#descrizione-della-soluzione)
+* [Correttezza](#correttezza)
 * [Benchmarks](#benchmarks)
 	* [Weak Scalability](#weak-scalability)
 	* [Strong Scalability](#strong-scalability)
@@ -159,6 +160,9 @@ void swap(int **current_matrix, int **new_matrix) {
 ```
 Al termine di tutte le generazioni, il proccesso master mediante una `MPI_GATHERV()` ottiene tutte le `process_matrix` e le aggrega all'interno di `matrix`. All'interno di `matrix` ci sarà lo stato finale al termine di tutte le generazioni.
 
+## Correttezza
+Lo stato delle diverse generazioni viene correttemente calcolato seguendo le regole del gioco. Inoltre, le modifiche dello stato di tutte le celle da una generazione alla successiva avvengono in simultaneo, perché lo stato attuale di ogni cella è letto da una matrice, viene calcolato il nuovo e scritto su un'altra matrice. Utilizzare due matrici, una in scrittura ed una in lettura, che si alternano ad ogni generazione permette di risparmiare in termini di memoria utilizzata.
+
 ## Benchmarks
 L'agoritmo è stato testato su **Google Cloud Platform** su un cluster di 6 macchine **e2-standard**. Ogni macchina è dotata di 4 VCPUs, quindi per un totale di 24 VCPUs. L'algorimo è stato testato in termini di **strong scalability** e **weak scalability**. Di seguti possiamo visionare i risultati.
 
@@ -191,6 +195,8 @@ L'algoritmo è stato esegutio su una matrice di 12800x12800 elementi. Lo speed u
 |   23  |            |          |
 |   24  |            |          |
 
+![strong_scalability](results/strong_scalability.png)
+
 ### Weak Scalability
 L'algoritmo è stato eseguito su una matrixe di 1000**P**x24000, dove **P** è il numero di processori.
 | VCPUs | Tempo in s |
@@ -220,6 +226,7 @@ L'algoritmo è stato eseguito su una matrixe di 1000**P**x24000, dove **P** è i
 |   23  |            |
 |   24  |            |
 
+![weak_scalability](results/weak_scalability.png)
 
 ## Analisi dei Risultati
 ``
