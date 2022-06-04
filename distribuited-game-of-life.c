@@ -1,6 +1,6 @@
 #include<stdio.h>           // Studente: Giuseppe Cardaropoli
 #include<stdlib.h>          // Matricola: 0522501310
-#include<time.h>            // Project code: 01310 % 5 == 0
+#include<time.h>            // Project ID: 01310 % 5 == 0
 #include"mpi.h"
 
 /* ASCII codes */
