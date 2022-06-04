@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Delete oldest performance file
+# Delete older performance file
 rm -rf results/strong_scalability.csv
 
 # Compile the program
@@ -9,7 +9,7 @@ mpicc distribuited-game-of-life.c -o distribuited-game-of-life
 # Add collumns names to CSV file
 echo "TIME,PROCESSES,ROWS,COLS,GENERATIONS" >> results/strong_scalability.csv
 
-# Exec the program with differents num of process and matrix size
+# Strong Scalability Test
 size=12800
 for ((p=1; p<=24; p=p+1))
 do
