@@ -250,7 +250,7 @@ L'algoritmo è stato eseguito su una matrixe di 1000**P**x24000 per 100 generazi
 |23        |129.233516|
 |24        |130.418855|
 
-Nel seguente grafico viene mostrato il tempo di esecuzione al variare del numero di processori e quindi della taglia dell'input
+Nel seguente grafico viene mostrato il tempo di esecuzione al variare del numero di processori e quindi al variere proporzionato della taglia dell'input. Anche in questo caso c'è il confronto con il risultato ideale.
 ![weak_scalability](results/weak_scalability.png)
 
 ## Analisi dei Risultati
