@@ -195,6 +195,8 @@ L'algoritmo è stato esegutio su una matrice di 12800x12800 elementi. Lo speed u
 |   23  |            |          |
 |   24  |            |          |
 
+![strong_scalability](results/strong_scalability.png)
+
 ### Weak Scalability
 L'algoritmo è stato eseguito su una matrixe di 1000**P**x24000, dove **P** è il numero di processori.
 | VCPUs | Tempo in s |
@@ -224,6 +226,7 @@ L'algoritmo è stato eseguito su una matrixe di 1000**P**x24000, dove **P** è i
 |   23  |            |
 |   24  |            |
 
+![weak_scalability](results/weak_scalability.png)
 
 ## Analisi dei Risultati
 ``
