@@ -112,7 +112,7 @@ void update_generation(int from, int to, int rows, int cols, int *process_matrix
     }
 }
 ```
-Questa funzione utilizza a sua volta la funzione `neighbords_alive()` per calcolare il numero di vicini vivi per ogni cella. Tale funzione considera tutti i prossibili casi:
+Questa funzione utilizza a sua volta la funzione `neighbors_alive()` per calcolare il numero di vicini vivi per ogni cella. Tale funzione considera tutti i prossibili casi:
 1. **cella non vincolata**: tutti i vicini sono locali;
 3. **cella vincolata superiormente**: i vicini superiori fanno parte della `top_row`;
 4. **cella vincolata inferiormente**: i vicini inferiori fanno parte della `bottom_row`;
