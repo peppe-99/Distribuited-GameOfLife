@@ -53,7 +53,7 @@ Prima di iniziare il gioco vengono controllati i parametri dati in input dall'ut
 
 `matrix` è un array che rappresenta la matrice di gioco, il cui stato sarà inizializzato dal processore **master** in maniera pseudocasuale. La matrice di gioco è stata suddivisa per righe in maniera equa fra tutti i processori (se possibile). La suddivisione viene effettuata con la funzione `MPI_Scatterv()` una volta aver calcolato i displacements e quanti elementi invare ad ogni processore.
 
-Ogni processore avrà la prima e/o l'ultima riga della propria sottomatrice vincolate. Per questo motivo, all'inizio di ogni generazione avviene uno **scambio non bloccante** di righe tra processori vicini. Ogni processore tranne l'ultimo invia la propria ultima riga al processore successivo ed ogni processore tranne il primo invia la sua prima riga al processore precedente. In `top_row` abbiamo l'ultima riga del processore precedente, invece, in `bottom_row` la prima riga del processore successivo.
+Ogni processore avrà la prima e/o l'ultima riga della propria sottomatrice vincolate. Per questo motivo, all'inizio di ogni generazione avviene uno **scambio non bloccante** di righe tra processori "vicini". Ogni processore tranne l'ultimo invia la propria ultima riga al processore successivo ed ogni processore tranne il primo invia la sua prima riga al processore precedente. In `top_row` abbiamo l'ultima riga del processore precedente, invece, in `bottom_row` la prima riga del processore successivo.
 ```c
 if (rank > 0) {
 	MPI_Isend(&process_matrix[0], col, MPI_INT, rank-1, rank-1, MPI_COMM_WORLD, &send_first_row);
