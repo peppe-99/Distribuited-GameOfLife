@@ -51,9 +51,9 @@ Sostituisci:
 
 Prima di iniziare il gioco vengono controllati i parametri dati in input dall'utente, riguardanti il numero di processori, grandezza della matrice e numero di generazioni. Successivamente vengono create tutte le strutture dati necessarie.
 
-`matrix` è un array che rappresenta la matrice di gioco, il cui stato sarà inizializzato dal processore **master** in maniera pseudocasuale. La matrice di gioco è stata suddivisa per righe in maniera equa fra tutti i processi. La suddivisione viene effettuata con la funzione `MPI_Scatterv()` una volta aver calcolato i displacements e quanti elementi invare ad ogni processo.
+`matrix` è un array che rappresenta la matrice di gioco, il cui stato sarà inizializzato dal processore **master** in maniera pseudocasuale. La matrice di gioco è stata suddivisa per righe in maniera equa fra tutti i processori (se possibile). La suddivisione viene effettuata con la funzione `MPI_Scatterv()` una volta aver calcolato i displacements e quanti elementi invare ad ogni processore.
 
-Ogni processore avrà la prima e/o l'ultima riga della propria sottomatrice vincolate. Per questo motivo, all'inizio di ogni generazione avviene uno **scambio non bloccante** di righe tra processori vicini. Ogni processore tranne l'ultimo invia la propria ultima riga (`bottom_row`) al processore successivo ed ogni processore tranne il primo invia la sua prima riga (`top_row`) al processore precedente:
+Ogni processore avrà la prima e/o l'ultima riga della propria sottomatrice vincolate. Per questo motivo, all'inizio di ogni generazione avviene uno **scambio non bloccante** di righe tra processori vicini. Ogni processore tranne l'ultimo invia la propria ultima riga al processore successivo ed ogni processore tranne il primo invia la sua prima riga al processore precedente. In `top_row` abbiamo l'ultima riga del processore precedente, invece, in `bottom_row` la prima riga del processore successivo.
 ```c
 if (rank > 0) {
 	MPI_Isend(&process_matrix[0], col, MPI_INT, rank-1, rank-1, MPI_COMM_WORLD, &send_first_row);
@@ -70,7 +70,7 @@ start_row = (rank == 0) ? 0 : 1;
 end_row = (rank == np-1) ? local_rows : local_rows-1;
 update_generation(start_row, end_row, local_rows, cols, process_matrix, new_process_matrix, NULL, NULL);
 ```
-In seguito, ogni processore inizia a calcolare il nuovo stato delle righe vincolate. Se la sottomatrice loca è composta da una sola riga allora sarà doppiamente vincolata. Altrimenti, avremo la prima e/o l'ultima riga vincolate.
+In seguito, ogni processore inizia a calcolare il nuovo stato delle righe vincolate. Se la sottomatrice locale è composta da una sola riga allora sarà doppiamente vincolata. Altrimenti, avremo la prima e/o l'ultima riga vincolate.
 ```c
 if (local_rows == 1) {
 	if (rank > 0) MPI_Wait(&receive_prev_row, MPI_STATUS_IGNORE);
@@ -87,14 +87,14 @@ else {
 		update_generation(start_row, start_row+1, local_rows, cols, process_matrix, new_process_matrix, top_row, bottom_row);
 	}
 	if (rank < np-1) {
-	MPI_Wait(&receive_next_row, MPI_STATUS_IGNORE);
+		MPI_Wait(&receive_next_row, MPI_STATUS_IGNORE);
                 
-	start_row = local_rows-1;
-	update_generation(start_row, start_row+1, local_rows, cols, process_matrix, new_process_matrix, top_row, bottom_row);
+		start_row = local_rows-1;
+		update_generation(start_row, start_row+1, local_rows, cols, process_matrix, new_process_matrix, top_row, bottom_row);
 	}           
 }
 ```
-In ogni caso andiamo ad utilizzare la seguente funzione `update_generatio()`:
+In ogni caso andiamo ad utilizzare la seguente funzione `update_generation()`:
 ```c
 void update_generation(int from, int to, int rows, int cols, int *process_matrix, int *new_process_matrix, int *top_row, int *bottom_row) {
     for (int i = from; i < to; i++) {
@@ -141,7 +141,7 @@ int neighbors_alive(int i, int j, int rows, int cols, int *process_matrix, int *
             tr_corner = top_row[j+1];
         }
     } 
-    /* else: i vicini superiori non eisstono */
+    /* else: i vicini superiori non esistono */
 
     /* vicini laterali */
     int left = (j > 0) ? process_matrix[i * cols + (j-1)] : 0;
@@ -181,16 +181,16 @@ void swap(int **current_matrix, int **new_matrix) {
     *new_matrix = temp;
 }
 ```
-Al termine di tutte le generazioni, il processore master mediante una `MPI_GATHERV()` ottiene tutte le `process_matrix` e le aggrega all'interno di `matrix`. Infine, all'interno di `matrix` ci sarà lo stato finale al termine di tutte le generazioni.
+Al termine di tutte le generazioni, il processore master mediante una `MPI_Gatherv()` ottiene tutte le `process_matrix` e le aggrega all'interno di `matrix`. Infine, all'interno di `matrix` ci sarà lo stato finale al termine di tutte le generazioni.
 
 ## Correttezza
-Lo stato delle diverse generazioni viene correttemente calcolato seguendo le regole del gioco. Inoltre, le modifiche dello stato di tutte le celle da una generazione alla successiva avvengono in simultaneo, perché lo stato attuale di ogni cella è letto da una matrice, viene calcolato il nuovo e scritto su un'altra matrice. Utilizzare due matrici, una in scrittura ed una in lettura, che si alternano ad ogni generazione permette di risparmiare in termini di memoria utilizzata.
+Lo stato delle diverse generazioni viene correttemente calcolato seguendo le regole del gioco. Inoltre, le modifiche dello stato di tutte le celle da una generazione alla successiva avvengono in simultaneo, perché lo stato attuale di ogni cella è letto da una matrice, viene calcolato il nuovo e scritto su un'altra matrice. Utilizzare due matrici, una in scrittura ed una in lettura, che si alternano ad ogni generazione permette di risparmiare in termini di memoria utilizzata. Inoltre, in fase di sviluppo veniva ricostruita la matrice al termine di ogni generazione e stampata dal processore **master**, così da controllare il corretto calcolo delle generazioni. Ovviamente, questa è stata rimossa.
 
 ## Benchmarks
-L'agoritmo è stato testato su **Google Cloud Platform** su un cluster di 6 macchine **e2-standard-4**. Ogni macchina è dotata di 4 VCPUs, quindi per un totale di 24 VCPUs. L'algorimo è stato testato in termini di **strong scalability** e **weak scalability**. Per automatizzare le esecuzioni del programma per i diversi test sono stati realizzati degli script bash che si possono trovare nella cartella **scripts**. Di seguti possiamo visionare i risultati.
+L'agoritmo è stato testato su **Google Cloud Platform** su un cluster di 6 macchine **e2-standard-4**. Ogni macchina è dotata di 4 VCPUs, quindi per un totale di 24 VCPUs. L'algorimo è stato testato in termini di **strong scalability** e **weak scalability**. Per automatizzare le esecuzioni del programma per i diversi test sono stati realizzati degli script bash che si possono trovare nella cartella **scripts**. Di seguito possiamo visionare i risultati.
 
 ### Strong Scalability
-L'algoritmo è stato esegutio su una matrice di 12800x12800 elementi per 100 generazioni. Lo speed up è stato calcolando dividendo il tempo di esecuzione con un processore con il tempo di esecuzione con **P** processori.
+L'algoritmo è stato eseguito su una matrice di 12800x12800 elementi per 100 generazioni. Lo speed up è stato calcolando dividendo il tempo di esecuzione con un processore con il tempo di esecuzione con **P** processori.
 |VCPUs     |Tempo in s|Speed up|
 |----------|----------|--------|
 |1         |403.73085 |-       |
@@ -222,7 +222,7 @@ Nel seguente grafico viene confrontato lo speed up ideale con quello ottenuto.
 ![strong_scalability](results/strong_scalability.png)
 
 ### Weak Scalability
-L'algoritmo è stato eseguito su una matrixe di 1000**P**x24000 per 100 generazioni, dove **P** è il numero di processori.
+L'algoritmo è stato eseguito su una matrice di 1000**P**x24000 elementi per 100 generazioni, dove **P** è il numero di processori.
 |VCPUs     |Tempo in s|
 |----------|----------|
 |1         |58.179410 |
